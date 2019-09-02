@@ -49,7 +49,7 @@ const (
 	operationPollInterval   = 100 * time.Millisecond
 	maxRecordsReturnedByAPI = 100
 	maxAsgNamesPerDescribe  = 50
-	refreshInterval         = 10 * time.Second
+	refreshInterval         = 1 * time.Minute
 )
 
 // AwsManager is handles aws communication and data caching.
@@ -98,7 +98,7 @@ func createAWSManagerInternal(
 		sess := session.New(aws.NewConfig().WithRegion(getRegion()))
 
 		if autoScalingService == nil {
-			autoScalingService = &autoScalingWrapper{autoscaling.New(sess)}
+			autoScalingService = &autoScalingWrapper{autoscaling.New(sess), map[string]string{}}
 		}
 
 		if ec2Service == nil {

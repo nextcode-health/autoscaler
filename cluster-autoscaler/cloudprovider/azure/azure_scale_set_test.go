@@ -76,8 +76,19 @@ func TestIncreaseSize(t *testing.T) {
 	assert.True(t, registered)
 	assert.Equal(t, len(provider.NodeGroups()), 1)
 
-	err := provider.NodeGroups()[0].IncreaseSize(1)
+	// current target size is 2.
+	targetSize, err := provider.NodeGroups()[0].TargetSize()
 	assert.NoError(t, err)
+	assert.Equal(t, targetSize, 2)
+
+	// increase 3 nodes.
+	err = provider.NodeGroups()[0].IncreaseSize(3)
+	assert.NoError(t, err)
+
+	// new target size should be 5.
+	targetSize, err = provider.NodeGroups()[0].TargetSize()
+	assert.NoError(t, err)
+	assert.Equal(t, 5, targetSize)
 }
 
 func TestBelongs(t *testing.T) {
@@ -186,4 +197,24 @@ func TestScaleSetNodes(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, len(instances), 1)
 	assert.Equal(t, instances[0], cloudprovider.Instance{Id: fakeProviderID})
+}
+
+func TestTemplateNodeInfo(t *testing.T) {
+	provider := newTestProvider(t)
+	registered := provider.azureManager.RegisterAsg(
+		newTestScaleSet(provider.azureManager, "test-asg"))
+	assert.True(t, registered)
+	assert.Equal(t, len(provider.NodeGroups()), 1)
+
+	asg := ScaleSet{
+		manager: newTestAzureManager(t),
+		minSize: 1,
+		maxSize: 5,
+	}
+	asg.Name = "test-scale-set"
+
+	nodeInfo, err := asg.TemplateNodeInfo()
+	assert.NoError(t, err)
+	assert.NotNil(t, nodeInfo)
+	assert.NotEmpty(t, nodeInfo.Pods())
 }
